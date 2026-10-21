@@ -4,8 +4,8 @@
 
 運行：
   pip install pandas numpy requests
-  python tw_abc_screener_backtest.py --asof 2026-10-20 --workers 10
-  python tw_abc_screener_backtest.py --data downloaded_daily.csv --asof 2026-10-20
+  python b_wave_breakout.py --asof 2026-10-20 --workers 10
+  python b_wave_breakout.py --data downloaded_daily.csv --asof 2026-10-20
 
 行情：https://github.com/chenyicheng2008/TWSTOCK (來源與品質由第三方提供)
 此程式在有網路的電腦執行才會下載行情；不應將未執行結果當作回測績效。
