@@ -1,0 +1,43 @@
+name: TW ABC B-breakout screener v2
+on:
+  workflow_dispatch:
+  schedule:
+    # Taiwan 19:40, Monday-Friday
+    - cron: '40 11 * * 1-5'
+permissions:
+  contents: read
+jobs:
+  scan:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt
+      - name: Validate Python tests
+        run: python -m unittest discover -s tests -v
+      - name: Scan Taiwan market
+        run: python b_wave_breakout.py --asof auto --min-universe 200 --watch-size 200 --workers 12 --out results
+      - name: Display key results on GitHub run page
+        if: always()
+        shell: bash
+        run: |
+          if [ -f results/GITHUB_SUMMARY.md ]; then
+            cat results/GITHUB_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No summary was produced; check the Scan Taiwan market logs.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Publish CSV and reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: tw-abc-v2-results-${{ github.run_number }}
+          path: results/
+          if-no-files-found: warn
+          retention-days: 30
