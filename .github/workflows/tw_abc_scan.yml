@@ -1,14 +1,14 @@
-name: TW ABC B-breakout screener
+name: TW ABC B-breakout screener v2
 on:
   workflow_dispatch:
   schedule:
-    # 11:40 UTC = 台灣時間19:40，週一到週五；第三方行情預計18:30更新
+    # Taiwan 19:40, Monday-Friday
     - cron: '40 11 * * 1-5'
 permissions:
   contents: read
 jobs:
   scan:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - name: Checkout repository
@@ -20,13 +20,24 @@ jobs:
           cache: pip
       - name: Install dependencies
         run: python -m pip install -r requirements.txt
-      - name: Run entire-market screener (at least 200 stocks)
+      - name: Validate Python tests
+        run: python -m unittest discover -s tests -v
+      - name: Scan Taiwan market
         run: python b_wave_breakout.py --asof auto --min-universe 200 --watch-size 200 --workers 12 --out results
-      - name: Publish scan CSV and reports
+      - name: Display key results on GitHub run page
+        if: always()
+        shell: bash
+        run: |
+          if [ -f results/GITHUB_SUMMARY.md ]; then
+            cat results/GITHUB_SUMMARY.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo 'No summary was produced; check the Scan Taiwan market logs.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Publish CSV and reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: tw-abc-results-${{ github.run_number }}
+          name: tw-abc-v2-results-${{ github.run_number }}
           path: results/
           if-no-files-found: warn
           retention-days: 30
